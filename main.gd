@@ -2,47 +2,55 @@ extends Node
 
 @export var mob_scene: PackedScene
 var score
-# Called when the node enters the scene tree for the first time.
 
-func ready():
-	new_game()
-
+func _ready():
+	pass
+	
 func game_over():
 	$ScoreTimer.stop()
 	$MobTimer.stop()
-	
-func  new_game():
+	$HUD.show_game_over()
+	$Music.stop()
+	$DeathSound.play()
+
+func new_game():
 	score = 0
+	get_tree().call_group("mobs", "queue_free")
 	$Player.start($StartPosition.position)
 	$StartTimer.start()
+	$HUD.update_score(score)
+	$HUD.show_message("Get Ready")
+	$Music.play()
 
 func _on_mob_timer_timeout():
-	#create new instatnce of mob scene
+	# Create a new instanece of the Mob scene
 	var mob = mob_scene.instantiate()
 	
-	#choose random location on path2d
-	var mob_spawn_location = get_node('MobPath/MobSpawnLocation')
+	# Choose a random location on Path2D
+	var mob_spawn_location = get_node("MobPath/MobSpawnLocation")
 	mob_spawn_location.progress_ratio = randf()
 	
-	#set mobs direction perependicular to path
+	#set the mob's direction perpendicular to the path direction
 	var direction = mob_spawn_location.rotation + PI / 2
 	
-	#set mobs position to random location
+	# Set the mob's position to a random location
 	mob.position = mob_spawn_location.position
 	
-	#add randomness to direction
+	# Add some randomness to the direction
 	direction += randf_range(-PI / 4, PI / 4)
 	mob.rotation = direction
 	
-	#choose velocity for mob
-	var velocity = Vector2(randf_range(150.0, 250.0), 0.0)
+	# Choose the velocity for the mob
+	var velocity = Vector2(randf_range(150.0, 250.0), 0)
 	mob.linear_velocity = velocity.rotated(direction)
-	
-	#spawn mob by adding to main
+
+	# Spawn the mob by adding it to the main scene
 	add_child(mob)
 
 func _on_score_timer_timeout():
 	score += 1
+	$HUD.update_score(score)
+
 
 func _on_start_timer_timeout():
 	$MobTimer.start()
